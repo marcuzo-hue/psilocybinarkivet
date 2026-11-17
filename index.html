@@ -165,6 +165,10 @@ ol.steps li:not(:last-child)::before{content:"";position:absolute;left:19px;top:
 .spl td:nth-child(2){color:var(--muted);font-size:.8rem}
 @media (max-width:720px){.spl{font-size:.8rem}.spl th,.spl td{padding:5px 4px}.spl td:first-child{white-space:normal}.spl th:nth-child(2),.spl td:nth-child(2){display:none}}
 @media (max-width:720px){.spc-r{grid-template-columns:110px 1fr 64px;gap:6px}.spc{font-size:.78rem}}
+.sphits{border:1px solid var(--accent);background:var(--accent-soft);border-radius:10px;padding:8px;margin:0 0 14px}
+.sphits-h{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:600;margin:2px 4px 6px}
+.sphits button{display:block;width:100%;text-align:left;font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;margin-top:6px;cursor:pointer}
+.sphits .s-meta{font-size:.78rem;color:var(--muted)}.sphits-go{display:block;color:var(--accent);font-size:.85rem;margin-top:2px}
 /* Timeline */
 .tl{position:relative;margin:0;padding:0 0 0 28px;list-style:none;max-width:860px}
 .tl::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:var(--rule)}
@@ -323,6 +327,7 @@ footer{border-top:1px solid var(--rule);padding-block:20px;font-size:.8rem;color
         <div class="resbar"><span id="count"></span>
           <label>Sortera <select id="sort" style="width:auto"><option value="new">Nyast först</option><option value="old">Äldst först</option><option value="rel">Bäst träff</option></select></label>
         </div>
+        <div id="sphits" class="sphits" hidden></div>
         <ol id="list"></ol>
       </div>
     </div>
@@ -447,6 +452,7 @@ function verFor(s){return s.verified==="crossref"?`<span class="ver">✓ DOI kon
 function render(){
   const {r,ts}=results();
   $("#count").textContent=`${r.length} av ${STUDIES.length} poster`;
+  try{const ts=terms(state.q);const box=$("#sphits");const h=ts.length?spSuggest(ts):[];box.hidden=!h.length;box.innerHTML=h.length?`<div class="sphits-h">Arter som matchar</div>`+h.map(x=>`<button type="button" data-spjump="${x.id}">${x.html}<span class="sphits-go">Visa art →</span></button>`).join(""):"";}catch(e){}
   $("#list").innerHTML=r.length?r.map(({s})=>`
   <li><article class="study" id="${s.id}">
     <div class="meta"><span class="yr">${s.year}</span>${pillFor(s)}${s.n?`<span>n = ${esc(s.n)}</span>`:""}${s.country?`<span>${esc(s.country)}</span>`:""}</div>
@@ -515,6 +521,7 @@ function updateSuggest(){
   sugIdx=-1; box.innerHTML=sugItems.map((x,i)=>`<button type="button" data-i="${i}">${x.html}</button>`).join(""); box.hidden=false;
 }
 $("#suggest").addEventListener("mousedown",e=>{const b=e.target.closest("button[data-i]");if(!b)return;e.preventDefault();const it=sugItems[+b.dataset.i];$("#suggest").hidden=true;jumpTo(it.id);});
+$("#sphits").addEventListener("click",e=>{const b=e.target.closest("[data-spjump]");if(b)jumpTo(b.dataset.spjump);});
 const q=$("#q");
 q.addEventListener("input",()=>{state.q=q.value;if(state.q&&state.sort==="new"&&$("#sort").value==="new"){} render();updateSuggest();showView("databas");});
 q.addEventListener("keydown",e=>{
